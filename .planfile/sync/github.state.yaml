@@ -1,0 +1,5 @@
+schema: planfile.sync-state/v2
+backend: github
+repository: wellmanifest/usermanual
+ticket_map: {}
+synced_at: '2026-10-05T15:00:00.000000+00:00'
