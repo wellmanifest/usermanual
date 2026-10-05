@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:wellmanifest:schema:usermanual:query:v1",
+  "title": "CQRS Query Specification Schema",
+  "description": "Schema for individual CQRS Query (Read surface) definition files in queries/*.query.yaml.",
+  "type": "object",
+  "required": [
+    "schema",
+    "id",
+    "name",
+    "method",
+    "endpoint",
+    "description",
+    "ui_trigger",
+    "response_schema"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "wellmanifest.usermanual.query/v1"
+    },
+    "id": {
+      "type": "string",
+      "description": "Unique dotted identifier of the query (e.g. faktury.stats.get)."
+    },
+    "name": {
+      "type": "string",
+      "description": "Short human-readable title of this query."
+    },
+    "method": {
+      "type": "string",
+      "const": "GET"
+    },
+    "endpoint": {
+      "type": "string",
+      "description": "URL path or parameterized pattern (e.g. /api/month/{month})."
+    },
+    "parameters": {
+      "type": "object",
+      "description": "Query or path parameters."
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed explanation of what state is inspected."
+    },
+    "ui_trigger": {
+      "type": "string",
+      "description": "Which UI component, button or user action executes this query."
+    },
+    "response_schema": {
+      "type": "object",
+      "description": "Expected shape and types of the response data."
+    },
+    "caching": {
+      "type": "object",
+      "properties": {
+        "ttl_seconds": { "type": "number" },
+        "strategy": { "type": "string" }
+      }
+    }
+  }
+}

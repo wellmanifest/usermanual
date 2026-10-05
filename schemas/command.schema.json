@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:wellmanifest:schema:usermanual:command:v1",
+  "title": "CQRS Command Specification Schema",
+  "description": "Schema for individual CQRS Command (Write/Mutation surface) definition files in commands/*.command.yaml.",
+  "type": "object",
+  "required": [
+    "schema",
+    "id",
+    "name",
+    "method",
+    "endpoint",
+    "description",
+    "idempotency",
+    "side_effects",
+    "ui_trigger"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "wellmanifest.usermanual.command/v1"
+    },
+    "id": {
+      "type": "string",
+      "description": "Unique dotted identifier of the command (e.g. faktury.scan.upload)."
+    },
+    "name": {
+      "type": "string",
+      "description": "Short human-readable title of this command."
+    },
+    "method": {
+      "type": "string",
+      "enum": ["POST", "PUT", "DELETE", "PATCH"]
+    },
+    "endpoint": {
+      "type": "string",
+      "description": "URL path or parameterized pattern (e.g. /api/reconcile/{month}/upload)."
+    },
+    "payload_schema": {
+      "type": "object",
+      "description": "Expected request body fields, formats, and validation constraints."
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed explanation of what mutation or transaction is executed."
+    },
+    "idempotency": {
+      "type": "string",
+      "description": "Deduplication and idempotency guarantees on repeated executions."
+    },
+    "side_effects": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Files, records, or external state mutated by this command."
+    },
+    "ui_trigger": {
+      "type": "string",
+      "description": "Which UI button, form submission or gesture triggers this command."
+    },
+    "process_uri": {
+      "type": "string",
+      "description": "Optional underlying Dockuri or mesh process URI backing this command."
+    },
+    "emitted_urns": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Canonical RFC 8141 URNs assigned to artifacts or transactions created."
+    },
+    "response_schema": {
+      "type": "object",
+      "description": "Expected response data structure."
+    }
+  }
+}
