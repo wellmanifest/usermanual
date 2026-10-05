@@ -84,7 +84,26 @@ Definicja autonomicznego aktora-użytkownika (Digital Twin Persona):
 
 ---
 
-## 3. Schemat JSON
+## 3. Schematy JSON
 
-Formalny schemat JSON Schema znajduje się w:
-[`schemas/usermanual.schema.json`](./schemas/usermanual.schema.json)
+Formalne schematy JSON Schema znajdują się w:
+- Główny schemat podręcznika: [`schemas/usermanual.schema.json`](./schemas/usermanual.schema.json)
+- Schemat zapytania (Query): [`schemas/query.schema.json`](./schemas/query.schema.json)
+- Schemat polecenia (Command): [`schemas/command.schema.json`](./schemas/command.schema.json)
+
+---
+
+## 4. Przewodniki i dokumentacja szczegółowa
+
+- [Specyfikacja Standardu CQRS](./docs/CQRS-SPECIFICATION.md)
+- [Wykrywanie Driftu i Weryfikacja na Żywo](./docs/DRIFT-VALIDATION.md)
+- [Przewodnik Tworzenia Cyfrowego Bliźniaka (Digital Twin)](./docs/DIGITAL-TWIN-GUIDE.md)
+
+---
+
+## 5. Implementacje referencyjne w ekosystemie
+
+1. **FakturApp (`willapx:faktury`)**: Pełna modularna struktura `apps/faktury/doc/usermanual/` z in-app walidatorem i cyfrowym bliźniakiem *Wacław Bilans*.
+2. **willmux (`paxlet:willmux`)**: Referencyjna specyfikacja wielookiennego agenta desktopowego w [`examples/willmux/`](./examples/willmux/).
+3. **willman (`willman:coordinator`)**: Referencyjna specyfikacja koordynatora klastra mesh w [`examples/willman/`](./examples/willman/).
+
