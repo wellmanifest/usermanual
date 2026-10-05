@@ -104,6 +104,16 @@ class CQRSValidator:
                 self.dsl = root_doc["dsl"]
             if "ui_components" in root_doc and isinstance(root_doc["ui_components"], list):
                 self.ui_components = root_doc["ui_components"]
+        else:
+            manifest_file = self.manual_dir / "manifest.yaml"
+            if not manifest_file.exists():
+                manifest_file = self.manual_dir / "manifest.json"
+            if manifest_file.exists():
+                try:
+                    self.manifest = load_yaml_or_json(manifest_file)
+                    self._validate_manifest_schema(self.manifest)
+                except Exception as e:
+                    self.errors.append(f"Failed parsing manifest {manifest_file.name}: {e}")
 
         # 2. Collect Queries
         queries_dir = self.manual_dir / "queries"
