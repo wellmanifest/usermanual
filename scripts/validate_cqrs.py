@@ -57,19 +57,53 @@ class CQRSValidator:
 
     def collect_definitions(self):
         if not self.manual_dir.exists():
-            self.errors.append(f"User manual directory does not exist: {self.manual_dir}")
+            self.errors.append(f"User manual path does not exist: {self.manual_dir}")
             return
 
-        # 1. Manifest
-        manifest_file = self.manual_dir / "manifest.yaml"
-        if not manifest_file.exists():
-            manifest_file = self.manual_dir / "manifest.json"
-        if manifest_file.exists():
+        # Check if manual_dir is a file or contains a root usermanual.yaml / usermanual.json
+        root_doc = None
+        if self.manual_dir.is_file():
             try:
-                self.manifest = load_yaml_or_json(manifest_file)
-                self._validate_manifest_schema(self.manifest)
+                root_doc = load_yaml_or_json(self.manual_dir)
             except Exception as e:
-                self.errors.append(f"Failed parsing manifest {manifest_file.name}: {e}")
+                self.errors.append(f"Failed parsing {self.manual_dir.name}: {e}")
+        elif (self.manual_dir / "usermanual.yaml").exists():
+            try:
+                root_doc = load_yaml_or_json(self.manual_dir / "usermanual.yaml")
+            except Exception as e:
+                self.errors.append(f"Failed parsing usermanual.yaml: {e}")
+        elif (self.manual_dir / "usermanual.json").exists():
+            try:
+                root_doc = load_yaml_or_json(self.manual_dir / "usermanual.json")
+            except Exception as e:
+                self.errors.append(f"Failed parsing usermanual.json: {e}")
+
+        if root_doc:
+            self.manifest = root_doc
+            self._validate_manifest_schema(root_doc)
+            if "queries" in root_doc and isinstance(root_doc["queries"], list):
+                for q in root_doc["queries"]:
+                    q["_file"] = "usermanual"
+                    self._validate_query_schema(q)
+                    self.queries.append(q)
+            if "commands" in root_doc and isinstance(root_doc["commands"], list):
+                for c in root_doc["commands"]:
+                    c["_file"] = "usermanual"
+                    self._validate_command_schema(c)
+                    self.commands.append(c)
+            if "env_variables" in root_doc and isinstance(root_doc["env_variables"], list):
+                for ev in root_doc["env_variables"]:
+                    self._validate_env_var_schema(ev, "usermanual")
+                    self.env_variables.append(ev)
+            if "digital_twin" in root_doc and isinstance(root_doc["digital_twin"], dict):
+                self.twin = root_doc["digital_twin"]
+                self._validate_twin_schema(self.twin, "usermanual")
+            if "processes" in root_doc and isinstance(root_doc["processes"], list):
+                self.processes = root_doc["processes"]
+            if "dsl" in root_doc and isinstance(root_doc["dsl"], dict):
+                self.dsl = root_doc["dsl"]
+            if "ui_components" in root_doc and isinstance(root_doc["ui_components"], list):
+                self.ui_components = root_doc["ui_components"]
 
         # 2. Collect Queries
         queries_dir = self.manual_dir / "queries"
