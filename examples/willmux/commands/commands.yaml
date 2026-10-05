@@ -1,0 +1,79 @@
+schema: "wellmanifest.usermanual.command/v1"
+commands:
+  - id: "willmux.commands.execute"
+    name: "Wykonanie polecenia naturalnego lub DSL w środowisku"
+    method: "POST"
+    endpoint: "/api/commands"
+    payload_schema:
+      text: { type: "string", required: true, example: "fokus B" }
+      origin: { type: "string", required: false, default: "user" }
+      session: { type: "string", required: false, default: "default" }
+    description: "Przetwarza polecenie tekstowe, dopasowuje reguły gramatyki DSL lub kieruje do łańcucha LLM, modyfikując okna lub uruchamiając proces."
+    idempotency: "Polecenia przełączania układu i fokusu są idempotentne; polecenia uruchamiania procesów rejestrują unikalne identyfikatory zadań."
+    side_effects:
+      - "Zmiana aktywnego okna, podziału siatki lub wywołanie procesu na węźle docelowym"
+      - "Zapis do osi czasu i logu zdarzeń"
+    ui_trigger: "Wprowadzenie tekstu w polu Polecenie lub naciśnięcie pigułki sugestii"
+    process_uri: "proc://willmux/command/dispatch/v1"
+    emitted_urns:
+      - "urn:willmux:event:command:{timestamp}"
+
+  - id: "willmux.chat.append"
+    name: "Dodanie wiadomości do czatu sterującego"
+    method: "POST"
+    endpoint: "/api/chat/messages"
+    payload_schema:
+      text: { type: "string", required: true }
+      role: { type: "string", required: false, default: "user" }
+    description: "Dołącza nową wypowiedź do strumienia dialogu roboczego i wyzwala asynchroniczną analizę intencji."
+    idempotency: "Dodaje nowy element do chronologicznej listy wiadomości."
+    side_effects:
+      - "Powiadomienie połączonych klientów przez strumień SSE"
+    ui_trigger: "Wysłanie wiadomości w dialogu czatu"
+    process_uri: "proc://willmux/chat/append/v1"
+    emitted_urns:
+      - "urn:willmux:chat:message:{uuid}"
+
+  - id: "willmux.chat.clear"
+    name: "Czyszczenie historii konwersacji czatu"
+    method: "DELETE"
+    endpoint: "/api/chat/messages"
+    payload_schema: {}
+    description: "Resetuje bieżący wątek dialogowy czatu w danej sesji."
+    idempotency: "Idempotentne wyczyszczenie bufora."
+    side_effects:
+      - "Wyczyszczenie tablicy wiadomości w sesji"
+    ui_trigger: "Przycisk 'Wyczyść czat' w menu dialogu"
+    process_uri: "proc://willmux/chat/clear/v1"
+    emitted_urns: []
+
+  - id: "willmux.uri.execute"
+    name: "Nawigacja i wykonanie akcji URI willmux://"
+    method: "POST"
+    endpoint: "/api/uri"
+    payload_schema:
+      u: { type: "string", required: true, example: "willmux://focus/B" }
+    description: "Rozwiązuje i wykonuje akcję zakodowaną w schemacie URI willmux:// (np. willmux://layout/grid, willmux://view/tickets)."
+    idempotency: "W zależności od ścieżki URI (nawigacja jest ściśle idempotentna)."
+    side_effects:
+      - "Aktualizacja stanu interfejsu lub załadowanie widoku"
+    ui_trigger: "Kliknięcie wewnętrznego linku akcji lub gest krawędziowy"
+    process_uri: "proc://willmux/uri/dispatch/v1"
+    emitted_urns:
+      - "urn:willmux:action:uri:{hash}"
+
+  - id: "willmux.sites.launch"
+    name: "Uruchomienie dedykowanego środowiska przeglądarki dla strony"
+    method: "POST"
+    endpoint: "/api/sites"
+    payload_schema:
+      url: { type: "string", required: true, example: "http://127.0.0.1:8085" }
+      env: { type: "string", required: false, default: "host" }
+    description: "Tworzy dedykowany profil przeglądarki Chromium w trybie aplikacji dla wybranego adresu URL."
+    idempotency: "Jeśli instancja dla danego hosta już istnieje, przełącza na nią fokus."
+    side_effects:
+      - "Uruchomienie procesu przeglądarki w wybranym środowisku roboczym"
+    ui_trigger: "Polecenie 'otwórz <url>' lub kliknięcie w zasobach"
+    process_uri: "proc://willmux/sites/launch/v1"
+    emitted_urns:
+      - "urn:willmux:instance:site:{hash}"

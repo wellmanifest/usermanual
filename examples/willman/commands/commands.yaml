@@ -1,0 +1,77 @@
+schema: "wellmanifest.usermanual.command/v1"
+commands:
+  - id: "willman.nodes.probe"
+    name: "Sondowanie węzła przed dołączeniem do klastra"
+    method: "POST"
+    endpoint: "/v1/nodes/probe"
+    payload_schema:
+      node_id: { type: "string", required: true, example: "lenovo-node" }
+    description: "Wysyła zadanie testowe 'willman doctor' do wskazanego węzła bez trwałego zapisywania zmian w rejestrze."
+    idempotency: "Sonda diagnostyczna, bezpieczna do wielokrotnego powtórzenia."
+    side_effects:
+      - "Wykonanie procedury testowej na węźle docelowym"
+    ui_trigger: "Przycisk 'Testuj połączenie' w kreatorze dodawania węzła"
+    process_uri: "proc://willman/node/probe/v1"
+    emitted_urns:
+      - "urn:willman:receipt:probe:{timestamp}"
+
+  - id: "willman.nodes.register"
+    name: "Rejestracja lub heartbeat węzła w klastrze"
+    method: "POST"
+    endpoint: "/v1/nodes/register"
+    payload_schema:
+      node_id: { type: "string", required: true }
+      manifest: { type: "object", required: false }
+    description: "Rejestruje nowy węzeł w siatce mesh lub aktualizuje jego status i metadane."
+    idempotency: "Idempotentna aktualizacja rekordu węzła w bazie danych."
+    side_effects:
+      - "Zapis rekordu w bazie .willman.sqlite3"
+      - "Emisja zdarzenia do klastra mesh"
+    ui_trigger: "Skrypt instalacyjny 'install-node.sh' uruchamiany na nowej maszynie"
+    process_uri: "proc://willman/node/register/v1"
+    emitted_urns:
+      - "urn:willman:node:{node_id}"
+
+  - id: "willman.tasks.create"
+    name: "Utworzenie i zlecenie zadania obliczeniowego"
+    method: "POST"
+    endpoint: "/v1/tasks"
+    payload_schema:
+      uri: { type: "string", required: true, example: "willman://operation/text.normalize/v1" }
+      input: { type: "object", required: true }
+      budget_ms: { type: "integer", required: false, default: 15000 }
+    description: "Zgłasza nowe zadanie do kolejki koordynatora z automatycznym trasowaniem do optymalnego węzła."
+    idempotency: "Generuje unikalny identyfikator task_id."
+    side_effects:
+      - "Zapis zadania w kolejce i powiadomienie wykonawcy"
+    ui_trigger: "Zlecenie operacji z poziomu konsoli lub API"
+    process_uri: "proc://willman/task/submit/v1"
+    emitted_urns:
+      - "urn:willman:task:{uuid}"
+
+  - id: "willman.events.ingest"
+    name: "Ingestia zdarzeń domenowych z węzłów"
+    method: "POST"
+    endpoint: "/v1/events/ingest"
+    payload_schema:
+      events: { type: "array", required: true }
+    description: "Przyjmuje partię zdarzeń telemetrii, logów i błędów od węzłów roboczych."
+    idempotency: "Deduplikacja zdarzeń po identyfikatorze event_id."
+    side_effects:
+      - "Zapis do dziennika zdarzeń i ewentualne wyzwolenie remediatora"
+    ui_trigger: "Okresowy raport agenta węzła"
+    process_uri: "proc://willman/events/ingest/v1"
+    emitted_urns: []
+
+  - id: "willman.strategy.evaluate"
+    name: "Ewaluacja i przeliczenie wag strategii"
+    method: "POST"
+    endpoint: "/v1/strategy/evaluate"
+    payload_schema: {}
+    description: "Przelicza efektywność trasowania i przydziału węzłów na podstawie ostatnich wskaźników telemetrycznych."
+    idempotency: "Idempotentne przeliczenie macierzy wag."
+    side_effects:
+      - "Aktualizacja aktywnych wag w pamięci podręcznej koordynatora"
+    ui_trigger: "Przycisk 'Przelicz optymalizację' w konsoli"
+    process_uri: "proc://willman/strategy/evaluate/v1"
+    emitted_urns: []

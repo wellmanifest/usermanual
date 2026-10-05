@@ -1,0 +1,26 @@
+schema: "wellmanifest.usermanual.env/v1"
+env_variables:
+  - name: "WILLMAN_HOST"
+    type: "string"
+    required: false
+    default: "0.0.0.0"
+    description: "Interfejs sieciowy nasłuchu serwera willman REST/mTLS."
+    security: "public"
+  - name: "WILLMAN_PORT"
+    type: "integer"
+    required: false
+    default: 8780
+    description: "Port główny serwera koordynatora willman."
+    security: "public"
+  - name: "WILLMAN_ROLE"
+    type: "string"
+    required: false
+    default: "coordinator"
+    description: "Rola w klastrze (coordinator lub standby)."
+    security: "internal"
+  - name: "WILLMAN_DATA_DIR"
+    type: "path"
+    required: false
+    default: ".willman"
+    description: "Katalog bazy sqlite3, certyfikatów i pętli zdarzeń."
+    security: "internal"

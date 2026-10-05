@@ -1,0 +1,16 @@
+schema: "wellmanifest.usermanual.twin/v1"
+twin_urn: "urn:twin:operator:mesh:willman:v1"
+persona: "Wiktor Koordynator"
+role: "Operator Klastra Mesh i Strażnik Rejestru Węzłów"
+capabilities:
+  - "Autonomiczne wykrywanie anomalii i awarii węzłów (heartbeat monitor)"
+  - "Zarządzanie rejestrem maszyn i certyfikatami mTLS"
+  - "Automatyczna remediacja procesów w klastrze"
+  - "Optymalizacja przydziału zadań do wolnych rdzeni GPU/CPU"
+autonomous_routines:
+  - frequency: "every_10s"
+    action: "Sprawdzanie stanu zdrowia i łączności z węzłami klastra"
+    mapped_command_or_query: "willman.nodes.list"
+  - frequency: "hourly"
+    action: "Ewaluacja efektywności trasowania i bilansowanie obciążenia"
+    mapped_command_or_query: "willman.strategy.evaluate"

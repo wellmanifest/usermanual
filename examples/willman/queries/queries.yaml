@@ -1,0 +1,88 @@
+schema: "wellmanifest.usermanual.query/v1"
+queries:
+  - id: "willman.health.get"
+    name: "Sprawdzenie statusu koordynatora willman"
+    method: "GET"
+    endpoint: "/health"
+    parameters: {}
+    description: "Zwraca status koordynatora, rolę (coordinator/standby), identyfikator noda, numer kadencji (term) oraz stan blokady fenced."
+    ui_trigger: "Wskaźnik zdrowia klastra w dashboardzie"
+    response_schema:
+      type: "object"
+      properties:
+        status: { type: "string", example: "ok" }
+        service: { type: "string", example: "willman" }
+        role: { type: "string", example: "coordinator" }
+        node_id: { type: "string" }
+
+  - id: "willman.v1.health.get"
+    name: "Sprawdzenie zdrowia API v1"
+    method: "GET"
+    endpoint: "/v1/health"
+    parameters: {}
+    description: "Weryfikuje dostępność usług pomocniczych, bazy sqlite3 i warstwy mTLS."
+    ui_trigger: "Sonda gotowości usług w sieci lokalnej"
+    response_schema:
+      type: "object"
+
+  - id: "willman.node.manifest"
+    name: "Pobranie manifestu węzła lokalnego"
+    method: "GET"
+    endpoint: "/v1/node/manifest"
+    parameters: {}
+    description: "Zwraca tożsamość węzła, deklarowane zasoby, wersję oprogramowania oraz listę wspieranych adapterów Dockuri."
+    ui_trigger: "Karta informacyjna węzła w konsoli mesh"
+    response_schema:
+      type: "object"
+
+  - id: "willman.nodes.list"
+    name: "Lista aktywnych węzłów w klastrze mesh"
+    method: "GET"
+    endpoint: "/v1/nodes"
+    parameters: {}
+    description: "Zwraca listę wszystkich zarejestrowanych maszyn, statusy heartbeat, adresy IP oraz obciążenie."
+    ui_trigger: "Widok floty węzłów w panelu administracyjnym"
+    response_schema:
+      type: "object"
+      properties:
+        nodes: { type: "array" }
+
+  - id: "willman.catalog.get"
+    name: "Pobranie katalogu operacji i narzędzi"
+    method: "GET"
+    endpoint: "/v1/catalog"
+    parameters: {}
+    description: "Zwraca dostępne operacje mesh (np. text.normalize, ocr.extract, docker.run) oraz wymagane schematy wejściowe."
+    ui_trigger: "Przeglądarka operacji klastra"
+    response_schema:
+      type: "object"
+
+  - id: "willman.docs.list"
+    name: "Katalog dokumentacji systemowej i runbooków"
+    method: "GET"
+    endpoint: "/v1/docs"
+    parameters: {}
+    description: "Zwraca listę dostępnych instrukcji operacyjnych, specyfikacji i procedur naprawczych."
+    ui_trigger: "Zakładka dokumentacji w konsoli webowej"
+    response_schema:
+      type: "array"
+
+  - id: "willman.processes.list"
+    name: "Pobranie listy procesów klastra i remediacji"
+    method: "GET"
+    endpoint: "/v1/processes"
+    parameters: {}
+    description: "Zwraca aktywne i zakończone procesy naprawcze, przebiegi zadań oraz zgłoszone anomalie."
+    ui_trigger: "Panel procesów i zadań w toku"
+    response_schema:
+      type: "object"
+
+  - id: "willman.strategy.get"
+    name: "Pobranie aktywnej strategii i polityki wykonawczej"
+    method: "GET"
+    endpoint: "/v1/strategy"
+    parameters: {}
+    description: "Zwraca zasady przydziału zadań, politykę bezpieczeństwa oraz wagi routingu."
+    ui_trigger: "Podgląd konfiguracji zarządczej klastra"
+    response_schema:
+      type: "object"

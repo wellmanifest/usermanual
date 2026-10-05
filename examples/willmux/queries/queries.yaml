@@ -1,0 +1,92 @@
+schema: "wellmanifest.usermanual.query/v1"
+queries:
+  - id: "willmux.state.get"
+    name: "Pobranie pełnego stanu okien, układu i procesów"
+    method: "GET"
+    endpoint: "/api/queries/state"
+    parameters: {}
+    description: "Zwraca bieżący stan menedżera willmux: układ (cols, grid, main, stage), listę okien A/B/C/D, aktywny fokus, historię osi czasu i zadania."
+    ui_trigger: "Inicjalizacja aplikacji i dynamiczna synchronizacja stanu interfejsu"
+    response_schema:
+      type: "object"
+      properties:
+        layout: { type: "string", example: "cols" }
+        order: { type: "array" }
+        focus: { type: "string", example: "A" }
+
+  - id: "willmux.snapshot.get"
+    name: "Eksport migawki konwersacyjno-procesowej"
+    method: "GET"
+    endpoint: "/api/snapshot"
+    parameters: {}
+    description: "Generuje ustrukturyzowany zrzut stanu zgodny ze standardem wellmanifest.conversational-process-snapshot/v1, w tym czat, procesy i zasoby."
+    ui_trigger: "Przycisk eksportu migawki lub wywołanie self-improvement"
+    response_schema:
+      type: "object"
+      properties:
+        schema: { type: "string", example: "wellmanifest.conversational-process-snapshot/v1" }
+
+  - id: "willmux.twin.get"
+    name: "Pobranie cyfrowego bliźniaka środowiska (environment twin)"
+    method: "GET"
+    endpoint: "/api/twin"
+    parameters:
+      probe:
+        type: "string"
+        required: false
+        default: "1"
+        description: "Flaga wyzwalająca sondowanie dostępnych węzłów i modeli (1/0)."
+    description: "Zwraca stan cyfrowego bliźniaka środowiska: okna, możliwości (capabilities), węzły, narzędzia oraz stan łańcucha modeli LLM."
+    ui_trigger: "Diagnostyka stanu maszyn i modeli w oknie dialogu"
+    response_schema:
+      type: "object"
+
+  - id: "willmux.chat.messages"
+    name: "Pobranie historii konwersacji czatu Polecenie"
+    method: "GET"
+    endpoint: "/api/chat/messages"
+    parameters: {}
+    description: "Zwraca chronologiczną listę wiadomości czatu sterującego (rola: user, system, error) wraz ze znacznikami czasu."
+    ui_trigger: "Otwarcie panelu czatu lub przełączenie zakładki dialogu"
+    response_schema:
+      type: "array"
+
+  - id: "willmux.envs.list"
+    name: "Lista zarejestrowanych środowisk i węzłów mesh"
+    method: "GET"
+    endpoint: "/api/envs"
+    parameters: {}
+    description: "Zwraca listę podłączonych węzłów (host, lenovo, cloud) oraz ich status łączności SSH/gRPC."
+    ui_trigger: "Zakładka wyboru środowiska w palecie poleceń"
+    response_schema:
+      type: "array"
+
+  - id: "willmux.apps.list"
+    name: "Katalog zainstalowanych aplikacji i modułów"
+    method: "GET"
+    endpoint: "/api/apps"
+    parameters: {}
+    description: "Zwraca listę modułów webowych i natywnych dostępnych do uruchomienia w panelach willmux (np. faktury, terminal, rynek)."
+    ui_trigger: "Przeglądarka aplikacji w menu startowym"
+    response_schema:
+      type: "array"
+
+  - id: "willmux.instances.list"
+    name: "Lista aktywnych instancji roboczych (workspaces)"
+    method: "GET"
+    endpoint: "/api/instances"
+    parameters: {}
+    description: "Zwraca uruchomione instancje robocze, przypisane porty VNC/pty i identyfikatory środowisk."
+    ui_trigger: "Zarządzanie oknami i widokami roboczymi"
+    response_schema:
+      type: "array"
+
+  - id: "willmux.settings.llm"
+    name: "Pobranie konfiguracji i łańcucha modeli LLM"
+    method: "GET"
+    endpoint: "/api/settings/llm"
+    parameters: {}
+    description: "Zwraca aktywną konfigurację modeli językowych (OpenAI, Anthropic, Ollama, vLLM) dla zapytań wykraczających poza gramatykę regułową."
+    ui_trigger: "Ustawienia sztucznej inteligencji w panelu preferencji"
+    response_schema:
+      type: "object"

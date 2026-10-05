@@ -1,0 +1,26 @@
+schema: "wellmanifest.usermanual.env/v1"
+env_variables:
+  - name: "WILLMUX_HOST"
+    type: "string"
+    required: false
+    default: "127.0.0.1"
+    description: "Interfejs sieciowy nasłuchu serwera willmux agent."
+    security: "public"
+  - name: "WILLMUX_PORT"
+    type: "integer"
+    required: false
+    default: 7070
+    description: "Port HTTP dla interfejsu webowego i API willmux."
+    security: "public"
+  - name: "WILLMUX_STATE_DIR"
+    type: "path"
+    required: false
+    default: "~/.willmux"
+    description: "Katalog trwałych migawek, historii czatu i logów."
+    security: "internal"
+  - name: "LLM_PROVIDER"
+    type: "string"
+    required: false
+    default: "openai"
+    description: "Dostawca modelu językowego do interpretacji intencji."
+    security: "secret"

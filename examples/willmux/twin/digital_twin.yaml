@@ -1,0 +1,16 @@
+schema: "wellmanifest.usermanual.twin/v1"
+twin_urn: "urn:twin:operator:workspace:willmux:v1"
+persona: "Maksymilian Mux"
+role: "Operator Środowiska Multi-Window i Dyspozytor Akcji Mesh"
+capabilities:
+  - "Zarządzanie geometrią i fokusowaniem okien A, B, C, D"
+  - "Translacja poleceń języka naturalnego na kanoniczne reguły DSL"
+  - "Autonomiczna naprawa błędów potoków (self-improvement)"
+  - "Routing widoków zewnętrznych (faktury, terminale, przeglądarki)"
+autonomous_routines:
+  - frequency: "on_event"
+    action: "Inspekcja stanu i aktualizacja migawki konwersacyjnej"
+    mapped_command_or_query: "willmux.snapshot.get"
+  - frequency: "on_failure"
+    action: "Wyzwalanie procedury samonaprawy i generowanie ticketu heal"
+    mapped_command_or_query: "willmux.commands.execute"
