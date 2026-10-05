@@ -1,0 +1,174 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:wellmanifest:schema:usermanual:v1",
+  "title": "Wellmanifest User Manual Specification Schema",
+  "description": "Standard schema for CQRS-structured user manuals, environment variables, process URIs, DSL tokens, and digital twin operator contracts.",
+  "type": "object",
+  "required": [
+    "schema",
+    "id",
+    "name",
+    "version",
+    "summary",
+    "env_variables",
+    "queries",
+    "commands",
+    "processes",
+    "dsl",
+    "digital_twin"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "wellmanifest.usermanual/v1"
+    },
+    "id": {
+      "type": "string",
+      "description": "Unique service or application identifier (e.g., willapx:faktury)."
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable title of the application or service."
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version of the application."
+    },
+    "summary": {
+      "type": "string",
+      "description": "High-level description of what the application does and its intended operator."
+    },
+    "base_url": {
+      "type": "string",
+      "description": "Default base URL or port template (e.g., http://127.0.0.1:8085)."
+    },
+    "env_variables": {
+      "type": "array",
+      "description": "Environment variables controlling service execution.",
+      "items": {
+        "type": "object",
+        "required": ["name", "type", "required", "description"],
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "type": "string", "enum": ["string", "integer", "boolean", "uri", "path"] },
+          "required": { "type": "boolean" },
+          "default": { "type": ["string", "number", "boolean", "null"] },
+          "description": { "type": "string" },
+          "security": { "type": "string", "enum": ["public", "internal", "secret"] }
+        }
+      }
+    },
+    "queries": {
+      "type": "array",
+      "description": "CQRS Query (Read) operations available in the web application.",
+      "items": {
+        "type": "object",
+        "required": ["id", "method", "endpoint", "description"],
+        "properties": {
+          "id": { "type": "string" },
+          "method": { "type": "string", "enum": ["GET"] },
+          "endpoint": { "type": "string" },
+          "parameters": { "type": "object" },
+          "description": { "type": "string" },
+          "ui_trigger": { "type": "string" },
+          "response_schema": { "type": "object" }
+        }
+      }
+    },
+    "commands": {
+      "type": "array",
+      "description": "CQRS Command (Write/Mutation) operations available in the web application.",
+      "items": {
+        "type": "object",
+        "required": ["id", "method", "endpoint", "description", "idempotency"],
+        "properties": {
+          "id": { "type": "string" },
+          "method": { "type": "string", "enum": ["POST", "PUT", "DELETE", "PATCH"] },
+          "endpoint": { "type": "string" },
+          "payload_schema": { "type": "object" },
+          "idempotency": { "type": "string" },
+          "side_effects": { "type": "array", "items": { "type": "string" } },
+          "ui_trigger": { "type": "string" },
+          "emitted_urns": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "processes": {
+      "type": "array",
+      "description": "Dockuri and mesh process URIs backing application operations.",
+      "items": {
+        "type": "object",
+        "required": ["process_uri", "description", "adapter"],
+        "properties": {
+          "process_uri": { "type": "string" },
+          "description": { "type": "string" },
+          "adapter": { "type": "string" },
+          "input_parameters": { "type": "object" },
+          "emitted_receipts": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "dsl": {
+      "type": "object",
+      "description": "DSL specification with CAPITALIZE action tokens and conversational syntax.",
+      "required": ["grammar", "capitalize_tokens", "examples"],
+      "properties": {
+        "grammar": { "type": "string" },
+        "capitalize_tokens": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["natural_language", "dsl_statement", "mapped_endpoint"],
+            "properties": {
+              "natural_language": { "type": "string" },
+              "dsl_statement": { "type": "string" },
+              "mapped_endpoint": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "ui_components": {
+      "type": "array",
+      "description": "Visual elements and interaction flows of the web application.",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "role", "mapped_actions"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "role": { "type": "string" },
+          "mapped_actions": { "type": "array", "items": { "type": "string" } },
+          "user_flow": { "type": "string" }
+        }
+      }
+    },
+    "digital_twin": {
+      "type": "object",
+      "description": "Digital Twin user persona, capabilities, and automated execution contract.",
+      "required": ["twin_urn", "role", "capabilities", "autonomous_routines"],
+      "properties": {
+        "twin_urn": { "type": "string" },
+        "role": { "type": "string" },
+        "persona": { "type": "string" },
+        "capabilities": { "type": "array", "items": { "type": "string" } },
+        "autonomous_routines": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["frequency", "action", "mapped_command_or_query"],
+            "properties": {
+              "frequency": { "type": "string" },
+              "action": { "type": "string" },
+              "mapped_command_or_query": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
