@@ -42,10 +42,16 @@ class CQRSValidator:
         if queries_dir.exists():
             for f in sorted(queries_dir.glob("*.yaml")) + sorted(queries_dir.glob("*.json")):
                 try:
-                    q = load_yaml_or_json(f)
-                    q["_file"] = str(f.relative_to(self.manual_dir))
-                    self._validate_query_schema(q)
-                    self.queries.append(q)
+                    doc = load_yaml_or_json(f)
+                    items = (
+                        doc.get("queries", [doc])
+                        if isinstance(doc, dict) and "queries" in doc
+                        else (doc if isinstance(doc, list) else [doc])
+                    )
+                    for q in items:
+                        q["_file"] = str(f.relative_to(self.manual_dir))
+                        self._validate_query_schema(q)
+                        self.queries.append(q)
                 except Exception as e:
                     self.errors.append(f"Failed parsing query file {f.name}: {e}")
 
@@ -54,10 +60,16 @@ class CQRSValidator:
         if commands_dir.exists():
             for f in sorted(commands_dir.glob("*.yaml")) + sorted(commands_dir.glob("*.json")):
                 try:
-                    c = load_yaml_or_json(f)
-                    c["_file"] = str(f.relative_to(self.manual_dir))
-                    self._validate_command_schema(c)
-                    self.commands.append(c)
+                    doc = load_yaml_or_json(f)
+                    items = (
+                        doc.get("commands", [doc])
+                        if isinstance(doc, dict) and "commands" in doc
+                        else (doc if isinstance(doc, list) else [doc])
+                    )
+                    for c in items:
+                        c["_file"] = str(f.relative_to(self.manual_dir))
+                        self._validate_command_schema(c)
+                        self.commands.append(c)
                 except Exception as e:
                     self.errors.append(f"Failed parsing command file {f.name}: {e}")
 
