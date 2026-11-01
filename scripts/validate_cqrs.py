@@ -40,9 +40,15 @@ def load_yaml_or_json(path: Path) -> Dict[str, Any]:
 
 
 class CQRSValidator:
-    def __init__(self, manual_dir: Path, base_url: Optional[str] = None):
+    def __init__(
+        self,
+        manual_dir: Path,
+        base_url: Optional[str] = None,
+        allow_mutations: bool = False,
+    ):
         self.manual_dir = manual_dir.resolve()
         self.base_url = base_url.rstrip("/") if base_url else None
+        self.allow_mutations = bool(allow_mutations)
         self.manifest: Dict[str, Any] = {}
         self.queries: List[Dict[str, Any]] = []
         self.commands: List[Dict[str, Any]] = []
@@ -269,21 +275,25 @@ class CQRSValidator:
             except Exception as e:
                 self.warnings.append(f"[DRIFT-QUERY-CONN] Could not reach query '{q.get('id')}' at {test_path}: {e}")
 
-        # 2. Verify Commands (POST/PUT/DELETE/PATCH)
+        # 2. Verify Commands (read-only OPTIONS probe by default; mutating methods require explicit opt-in)
         for c in self.commands:
             raw_endpoint = c.get("endpoint", "")
             test_path = re.sub(r"\{month\}", "2026.06", raw_endpoint)
             test_path = re.sub(r"\{[a-zA-Z0-9_]+\}", "test", test_path)
             full_url = f"{self.base_url}{test_path}"
+            declared_method = str(c.get("method") or "POST").upper()
+            probe_method = declared_method if self.allow_mutations else "OPTIONS"
+            probe_body = b"{}" if self.allow_mutations else None
+            probe_headers = {"User-Agent": "CQRSValidator/1.0", "Accept": "application/json"}
+            if self.allow_mutations:
+                probe_headers["Content-Type"] = "application/json"
 
             try:
                 req = urllib.request.Request(
                     full_url,
-                    data=b"{}",
-                    headers={
-                        "User-Agent": "CQRSValidator/1.0",
-                        "Content-Type": "application/json",
-                    }
+                    data=probe_body,
+                    headers=probe_headers,
+                    method=probe_method,
                 )
                 with urllib.request.urlopen(req, timeout=4.0) as resp:
                     pass
@@ -294,7 +304,7 @@ class CQRSValidator:
                 elif e.code == 404:
                     self.errors.append(f"[DRIFT-404-COMMAND] Declared command '{c.get('id')}' at {test_path} returned 404 Not Found")
                 else:
-                    # 400, 422, 500, etc. means the route exists and is processed
+                    # 405 Method Not Allowed (on read-only OPTIONS probe), 400, 422, etc. confirm route existence
                     pass
             except Exception as e:
                 self.warnings.append(f"[DRIFT-COMMAND-CONN] Could not reach command '{c.get('id')}' at {test_path}: {e}")
@@ -308,6 +318,7 @@ class CQRSValidator:
         return {
             "valid": valid,
             "manifest_id": self.manifest.get("id"),
+            "allow_mutations": self.allow_mutations,
             "queries_count": len(self.queries),
             "commands_count": len(self.commands),
             "env_vars_count": len(self.env_variables),
@@ -325,9 +336,14 @@ def main():
     parser = argparse.ArgumentParser(description="Validate CQRS User Manual files and detect live implementation drift.")
     parser.add_argument("manual_dir", type=Path, help="Path to doc/usermanual directory containing queries/ and commands/")
     parser.add_argument("--url", type=str, default=None, help="Base URL of running server to verify live endpoint drift")
+    parser.add_argument(
+        "--allow-mutations",
+        action="store_true",
+        help="Explicitly allow mutating POST/PUT/DELETE/PATCH probes instead of read-only OPTIONS checks",
+    )
     args = parser.parse_args()
 
-    validator = CQRSValidator(args.manual_dir, args.url)
+    validator = CQRSValidator(args.manual_dir, args.url, allow_mutations=args.allow_mutations)
     res = validator.run()
     print(json.dumps(res, indent=2, ensure_ascii=False))
     sys.exit(0 if res["valid"] else 1)

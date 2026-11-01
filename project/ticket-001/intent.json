@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "1.0.0",
+  "ticketId": "ticket-001",
+  "title": "Make CQRS command live-drift probe read-only by default",
+  "owner": "antigravity",
+  "workstream": "application",
+  "status": "IN_PROGRESS",
+  "phase": "EDIT",
+  "allowedPaths": [
+    "project/ticket-001/**",
+    "scripts/validate_cqrs.py",
+    "tests/test_ecosystem_cqrs.py"
+  ]
+}
