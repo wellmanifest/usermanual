@@ -91,3 +91,110 @@ def test_willapx_faktury_cqrs_usermanual_live_drift():
     assert res["valid"] is True, f"Live drift errors: {res['errors']}"
     assert res["drift_detected"] is False
     assert len(res["errors"]) == 0
+
+
+def test_live_command_drift_probe_is_readonly_by_default(tmp_path):
+    """Ensure command drift checks never issue mutating HTTP methods unless opted in."""
+    import json
+    import threading
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+    observed_methods: list[tuple[str, str]] = []
+
+    class Handler(BaseHTTPRequestHandler):
+        def log_message(self, fmt, *args):
+            return
+
+        def _dispatch(self, method: str):
+            observed_methods.append((method, self.path))
+            if self.path == "/api/state" and method == "GET":
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(b'{"ok":true}')
+            elif self.path == "/api/restart":
+                if method == "OPTIONS":
+                    self.send_response(405)
+                    self.end_headers()
+                else:
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json")
+                    self.end_headers()
+                    self.wfile.write(b'{"restarted":true}')
+            else:
+                self.send_response(404)
+                self.send_header("Content-Type", "text/plain")
+                self.end_headers()
+                self.wfile.write(b"not found")
+
+        def do_GET(self):
+            self._dispatch("GET")
+
+        def do_OPTIONS(self):
+            self._dispatch("OPTIONS")
+
+        def do_POST(self):
+            self._dispatch("POST")
+
+    manual_file = tmp_path / "usermanual.json"
+    base_doc = {
+        "schema": "urn:wellmanifest:spec:usermanual:v1",
+        "id": "test:service",
+        "name": "Test Service",
+        "version": "1.0.0",
+        "summary": "Read-only drift probe verification",
+        "queries": [
+            {
+                "id": "get_state",
+                "method": "GET",
+                "endpoint": "/api/state",
+                "description": "Read state",
+                "ui_trigger": "Ctrl+B 1",
+            }
+        ],
+        "commands": [
+            {
+                "id": "restart_service",
+                "method": "POST",
+                "endpoint": "/api/restart",
+                "description": "Restart service",
+                "idempotency": "non-idempotent",
+                "side_effects": "restarts process",
+                "ui_trigger": "Ctrl+B :",
+            }
+        ],
+    }
+    manual_file.write_text(json.dumps(base_doc), encoding="utf-8")
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        base_url = f"http://127.0.0.1:{server.server_address[1]}"
+        ro_res = CQRSValidator(tmp_path, base_url=base_url).run()
+        assert ro_res["valid"] is True, ro_res["errors"]
+        assert ro_res["allow_mutations"] is False
+        assert ("POST", "/api/restart") not in observed_methods
+        assert ("OPTIONS", "/api/restart") in observed_methods
+
+        # Missing command route still triggers DRIFT-404-COMMAND via read-only OPTIONS
+        missing_doc = dict(base_doc)
+        missing_doc["commands"] = [
+            {**base_doc["commands"][0], "id": "missing_cmd", "endpoint": "/api/nonexistent"}
+        ]
+        manual_file.write_text(json.dumps(missing_doc), encoding="utf-8")
+        drift_res = CQRSValidator(tmp_path, base_url=base_url).run()
+        assert drift_res["valid"] is False
+        assert drift_res["drift_detected"] is True
+        assert any("DRIFT-404-COMMAND" in err for err in drift_res["errors"])
+
+        # Explicit opt-in sends POST
+        manual_file.write_text(json.dumps(base_doc), encoding="utf-8")
+        observed_methods.clear()
+        rw_res = CQRSValidator(tmp_path, base_url=base_url, allow_mutations=True).run()
+        assert rw_res["valid"] is True
+        assert rw_res["allow_mutations"] is True
+        assert ("POST", "/api/restart") in observed_methods
+    finally:
+        server.shutdown()
+        server.server_close()
